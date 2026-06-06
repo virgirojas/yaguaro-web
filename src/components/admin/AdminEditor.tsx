@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ContactsPanel } from "@/components/admin/ContactsPanel";
 import { ImageField } from "@/components/admin/ImageField";
 import type { SiteContent } from "@/types/site-content";
 
 const TABS = [
+  { id: "consultas", label: "Consultas" },
   { id: "general", label: "General" },
   { id: "contacto", label: "Contacto" },
   { id: "inicio", label: "Inicio" },
@@ -100,7 +102,7 @@ export function AdminEditor({ initialContent }: { initialContent: SiteContent })
             <button
               type="button"
               onClick={handleSave}
-              disabled={status === "saving"}
+              disabled={status === "saving" || tab === "consultas"}
               className="rounded-lg bg-accent-dark px-5 py-2 text-sm font-semibold text-white hover:bg-accent disabled:opacity-50"
             >
               {status === "saving" ? "Guardando..." : "Guardar cambios"}
@@ -127,6 +129,8 @@ export function AdminEditor({ initialContent }: { initialContent: SiteContent })
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">
+          {tab === "consultas" && <ContactsPanel />}
+
           {tab === "general" && (
             <Section title="Información general">
               <Field label="Nombre" value={content.siteConfig.name} onChange={(v) => updateSiteConfig(setContent, "name", v)} />

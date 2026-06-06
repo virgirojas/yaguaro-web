@@ -58,6 +58,21 @@ src/
 | `/obras` | Portfolio de proyectos |
 | `/contacto` | Formulario y datos de contacto |
 
+## API
+
+`POST /api/contact` — Guarda consultas en MongoDB (colección `contacts`).
+
+```json
+{
+  "name": "Nombre",
+  "phone": "+54 9 ...",
+  "email": "email@ejemplo.com",
+  "message": "Mensaje"
+}
+```
+
+Las consultas se ven en el admin → pestaña **Consultas**.
+
 ## Panel de administración
 
 Accedé a [http://localhost:3000/admin](http://localhost:3000/admin) con la contraseña definida en `ADMIN_PASSWORD`.
@@ -69,21 +84,9 @@ Desde el panel podés editar:
 - Contenido de Inicio, Nosotros, Servicios, Soluciones y Obras
 - URLs de imágenes, proyectos, soluciones y galerías
 - **Subida directa de imágenes** (JPG, PNG, WebP, GIF hasta 5 MB) — se guardan en `public/uploads/`
+- **Consultas del formulario** — listado, marcar leídas, eliminar
 
 Los cambios se guardan en MongoDB y se reflejan en el sitio al instante.
-
-## API
-
-`POST /api/contact` — Guarda consultas en MongoDB.
-
-```json
-{
-  "name": "Nombre",
-  "phone": "+54 9 ...",
-  "email": "email@ejemplo.com",
-  "message": "Mensaje"
-}
-```
 
 ## Producción
 

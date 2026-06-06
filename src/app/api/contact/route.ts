@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDatabaseErrorMessage } from "@/lib/contact-errors";
 import { connectDB } from "@/lib/mongodb";
 import { Contact } from "@/models/Contact";
 
@@ -23,14 +24,19 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
-    await Contact.create({ name, phone, email, message });
+    await Contact.create({
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim().toLowerCase(),
+      message: message.trim(),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error al guardar contacto:", error);
     return NextResponse.json(
-      { error: "No se pudo enviar el mensaje. Intentá nuevamente." },
-      { status: 500 },
+      { error: getDatabaseErrorMessage(error) },
+      { status: 503 },
     );
   }
 }

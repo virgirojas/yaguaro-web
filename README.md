@@ -129,5 +129,29 @@ git push -u origin main
 
 ### Nota sobre imágenes subidas
 
-En Vercel el filesystem es efímero: las imágenes subidas desde el admin **no persisten** entre deploys. Para producción con subida de archivos, conviene integrar [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) o un servicio similar. Las URLs externas (yaguaro.ar) siguen funcionando sin cambios.
+En Vercel el filesystem es efímero. El proyecto usa **Vercel Blob** en producción para persistir imágenes del admin.
+
+#### Vercel Blob — ¿tiene costo?
+
+| Plan | Storage | Subidas/mes | Lecturas/mes | Transferencia |
+|------|---------|-------------|--------------|---------------|
+| **Hobby (gratis)** | 1 GB | 2.000 | 10.000 | 10 GB |
+| **Pro ($20/mes)** | 5 GB incl. | 10.000 incl. | 100.000 incl. | 100 GB incl. |
+
+Para un sitio corporativo como Yaguaro (decenas de fotos, pocas subidas al mes), el **plan Hobby suele alcanzar**. Si superás los límites en Hobby, Blob se pausa hasta el próximo ciclo (no te cobran de más).
+
+Precios Pro on-demand: ~USD 0,023/GB storage, ~USD 5 por millón de subidas.
+
+#### Configurar Blob en Vercel
+
+1. En tu proyecto Vercel → **Storage** → **Create Database** → **Blob**
+2. Nombre sugerido: `yaguaro-images` · acceso **Public**
+3. Vercel agrega automáticamente `BLOB_READ_WRITE_TOKEN` a las variables de entorno
+4. Redeploy
+
+En local, sin token, las imágenes se guardan en `public/uploads/` (solo desarrollo).
+
+```bash
+vercel env pull   # opcional: traer el token a .env.local
+```
 

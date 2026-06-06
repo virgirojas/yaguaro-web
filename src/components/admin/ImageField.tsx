@@ -59,7 +59,10 @@ export function ImageField({ label, value, onChange }: ImageFieldProps) {
             fill
             className="object-cover"
             sizes="320px"
-            unoptimized={value.startsWith("/uploads/")}
+            unoptimized={
+              value.startsWith("/uploads/") ||
+              value.includes("blob.vercel-storage.com")
+            }
           />
         </div>
       )}

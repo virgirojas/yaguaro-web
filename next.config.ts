@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "yaguaro.ar",
         pathname: "/wp-content/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/**",
+      },
     ],
   },
 };

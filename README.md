@@ -155,7 +155,7 @@ Sin esto, el admin devuelve error 500 al subir fotos.
 4. **Connect to Project** → elegí `yaguaro-web` (agrega `BLOB_READ_WRITE_TOKEN` solo)
 5. **Deployments** → **Redeploy** el último deploy (las variables nuevas no aplican al deploy anterior)
 
-Comprobá en **Settings → Environment Variables** que exista `BLOB_READ_WRITE_TOKEN`.
+Comprobá en **Settings → Environment Variables** que exista **`BLOB_STORE_ID`** (auth OIDC, lo normal hoy) o `BLOB_READ_WRITE_TOKEN` (legacy). `BLOB_WEBHOOK_PUBLIC_KEY` es solo para webhooks, no alcanza para subir archivos.
 
 En local, sin token, las imágenes se guardan en `public/uploads/` (solo desarrollo).
 

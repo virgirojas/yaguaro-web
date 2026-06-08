@@ -18,6 +18,13 @@ function isVercel(): boolean {
   return process.env.VERCEL === "1";
 }
 
+/** Blob conectado al proyecto (OIDC: BLOB_STORE_ID, o legacy: BLOB_READ_WRITE_TOKEN). */
+export function isBlobConfigured(): boolean {
+  return Boolean(
+    process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN,
+  );
+}
+
 async function uploadToLocal(file: File, filename: string): Promise<string> {
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
   await mkdir(uploadsDir, { recursive: true });
@@ -27,14 +34,10 @@ async function uploadToLocal(file: File, filename: string): Promise<string> {
 }
 
 async function uploadToBlob(file: File, filename: string): Promise<string> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) {
-    throw new Error("BLOB_MISSING");
-  }
-
+  // El SDK usa OIDC (VERCEL_OIDC_TOKEN + BLOB_STORE_ID) en Vercel,
+  // o BLOB_READ_WRITE_TOKEN si está definido.
   const blob = await put(`yaguaro/${filename}`, file, {
     access: "public",
-    token,
     addRandomSuffix: false,
   });
 
@@ -42,9 +45,14 @@ async function uploadToBlob(file: File, filename: string): Promise<string> {
 }
 
 export async function uploadImage(file: File, filename: string): Promise<string> {
-  const hasBlobToken = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  if (isVercel()) {
+    if (!isBlobConfigured()) {
+      throw new Error("BLOB_MISSING");
+    }
+    return uploadToBlob(file, filename);
+  }
 
-  if (isVercel() || hasBlobToken) {
+  if (isBlobConfigured() || process.env.BLOB_READ_WRITE_TOKEN) {
     return uploadToBlob(file, filename);
   }
 
@@ -54,12 +62,22 @@ export async function uploadImage(file: File, filename: string): Promise<string>
 export function getUploadErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message === "BLOB_MISSING") {
     return (
-      "Vercel Blob no está configurado. En Vercel: Storage → Create Database → Blob " +
-      "(acceso Public), conectalo al proyecto y redeploy."
+      "Vercel Blob no está conectado al proyecto. En Storage → tu Blob store → " +
+      "Projects → Connect to yaguaro-web, luego redeploy."
     );
   }
 
   const message = error instanceof Error ? error.message : String(error);
+
+  if (
+    message.includes("No blob credentials") ||
+    message.includes("No read-write token")
+  ) {
+    return (
+      "Blob sin credenciales en este deploy. Conectá el store al proyecto " +
+      "(debe aparecer BLOB_STORE_ID) y hacé redeploy."
+    );
+  }
 
   if (
     message.includes("EROFS") ||
@@ -67,26 +85,22 @@ export function getUploadErrorMessage(error: unknown): string {
     message.includes("ENOENT")
   ) {
     return (
-      "No se puede guardar en disco en producción. Configurá Vercel Blob " +
-      "(Storage → Blob) y redeploy."
+      "No se puede guardar en disco en producción. Conectá Vercel Blob al proyecto y redeploy."
+    );
+  }
+
+  if (message.includes("Unauthorized") || message.includes("403")) {
+    return (
+      "Sin permiso para escribir en Blob. Verificá que el store esté conectado al proyecto y redeploy."
     );
   }
 
   if (
-    message.includes("No token") ||
-    message.includes("BLOB_READ_WRITE_TOKEN") ||
-    message.includes("Unauthorized") ||
-    message.includes("403")
+    message.includes("access") &&
+    (message.includes("private") || message.includes("public"))
   ) {
     return (
-      "Token de Vercel Blob inválido o ausente. Verificá Storage → Blob en el proyecto " +
-      "y que BLOB_READ_WRITE_TOKEN esté en Environment Variables."
-    );
-  }
-
-  if (message.includes("store") && message.includes("access")) {
-    return (
-      "El Blob store debe ser Public, o usá access compatible con tu store en Vercel."
+      "El Blob store debe ser Public para imágenes del sitio. Creá un store Public o cambiá el existente."
     );
   }
 

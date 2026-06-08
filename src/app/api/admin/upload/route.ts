@@ -1,8 +1,10 @@
-import { put } from "@vercel/blob";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import {
+  buildImageFilename,
+  getUploadErrorMessage,
+  uploadImage,
+} from "@/lib/upload-image";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -12,28 +14,7 @@ const ALLOWED_TYPES = new Set([
   "image/gif",
 ]);
 
-const EXTENSIONS: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-  "image/gif": ".gif",
-};
-
-async function uploadToLocal(file: File, filename: string): Promise<string> {
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadsDir, filename), buffer);
-  return `/uploads/${filename}`;
-}
-
-async function uploadToBlob(file: File, filename: string): Promise<string> {
-  const blob = await put(`yaguaro/${filename}`, file, {
-    access: "public",
-    addRandomSuffix: false,
-  });
-  return blob.url;
-}
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
@@ -65,18 +46,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const ext = EXTENSIONS[file.type] ?? ".jpg";
-    const filename = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}${ext}`;
-
-    const url = process.env.BLOB_READ_WRITE_TOKEN
-      ? await uploadToBlob(file, filename)
-      : await uploadToLocal(file, filename);
+    const filename = buildImageFilename(file);
+    const url = await uploadImage(file, filename);
 
     return NextResponse.json({ url });
   } catch (error) {
     console.error("Error al subir imagen:", error);
     return NextResponse.json(
-      { error: "No se pudo subir la imagen" },
+      { error: getUploadErrorMessage(error) },
       { status: 500 },
     );
   }

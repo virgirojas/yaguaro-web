@@ -145,12 +145,17 @@ Para un sitio corporativo como Yaguaro (decenas de fotos, pocas subidas al mes),
 
 Precios Pro on-demand: ~USD 0,023/GB storage, ~USD 5 por millón de subidas.
 
-#### Configurar Blob en Vercel
+#### Configurar Blob en Vercel (requerido para subir imágenes en producción)
 
-1. En tu proyecto Vercel → **Storage** → **Create Database** → **Blob**
-2. Nombre sugerido: `yaguaro-images` · acceso **Public**
-3. Vercel agrega automáticamente `BLOB_READ_WRITE_TOKEN` a las variables de entorno
-4. Redeploy
+Sin esto, el admin devuelve error 500 al subir fotos.
+
+1. En [vercel.com](https://vercel.com) → proyecto **yaguaro-web** → pestaña **Storage**
+2. **Create Database** → **Blob** → nombre `yaguaro-images`
+3. Acceso **Public** (importante)
+4. **Connect to Project** → elegí `yaguaro-web` (agrega `BLOB_READ_WRITE_TOKEN` solo)
+5. **Deployments** → **Redeploy** el último deploy (las variables nuevas no aplican al deploy anterior)
+
+Comprobá en **Settings → Environment Variables** que exista `BLOB_READ_WRITE_TOKEN`.
 
 En local, sin token, las imágenes se guardan en `public/uploads/` (solo desarrollo).
 
